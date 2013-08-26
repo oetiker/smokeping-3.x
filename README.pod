@@ -1,4 +1,22 @@
-smokeping-3.x
-=============
+=head1 SmokePing 3.x
 
-reengineered SmokePing, using Extopus as its frontend
+SmokePing is a monitoring system, specialized in end-to-end measurements.
+Instead of asking a 3rd system for performance data and logging the answer,
+smokeping is able to execute measurements it self. A plugin architecture
+provides support for a wide variety of target systems.
+
+A master-slave architecture allows several SmokePing instances to get their
+configuration form one central point. Slave instances may sit behind
+fire-walls since the only requirement is that they can reach the master
+server over a http(s) link to get configuration instructions and return
+measurement data.
+
+=head2 Architecture
+
+In version 3, SmokePing focusses on measurements and does not provide a web
+frontend itself. It leaverages the services of
+L<Extopus|http://www.extopus.org> to present data in a modern and user-friendly way.
+
+
+
+
