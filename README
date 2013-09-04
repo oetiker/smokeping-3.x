@@ -1,0 +1,29 @@
+SmokePing 3.x
+=============
+
+SmokePing is a monitoring system, specialized in end-to-end measurements.
+Instead of asking a 3rd system for performance data and logging the answer,
+SmokePing exectutes its own probes. Plug-ins provide support for a wide
+variety of measurements.
+
+The master-slave architecture allows several SmokePing instances to get their
+configuration form one central point. Slave instances may sit behind
+fire-walls since the only requirement is that they can reach the master
+server over a http(s) link to get configuration instructions and return
+measurement data.
+
+SmokePing's focus is on running probes and raising alerts. It provides
+access to the fruits of its toil via a REST interface.
+
+Data Visualisation
+------------------
+
+SmokePing is supported by the Extopus frontend. Extopus can integrate data
+from several monitoring systems in a single coherent GUI. See
+www.extopus.org for more information.
+
+
+Status
+------
+
+2013-09-04 No real code yet, only infrastructure and documentation.

@@ -1,0 +1,118 @@
+=head1 NAME 
+
+INSTALL - SmokePing Setup Instructions
+
+=head1 SYNOPSIS
+
+The purpose of SmokePing is to figure out performance data. It does this be
+running specialized probe module. SmokePing makes its findings available
+over a REST API. A custome plugin for extopus allows to visualize the
+smokeping data in a modern webinterface.
+
+This document describes how to install and test the SmokePing system.
+
+=head1 INSTALLATION
+
+SmokePing is written in perl. It requires a current version of perl as well as a
+few special perl modules to be able to work.
+
+=head2 Unpacking SmokePing
+
+First you have to decide on a location where you want to install SmokePing. Save
+your choice into an environment variable as the rest of these instructions
+will revere them.
+
+ export PREFIX=/opt/smokeping
+
+Unpack the distribution somewere other than your installation target and run configure.
+
+ cd /tmp
+ tar xf smokeping-3.0.tar.gz 
+ cd smokeping-3.0
+ ./configure --prefix=$PREFIX
+
+Configure will not be happy, as it will probably miss many of the required
+thirdparty packages. So the next step is to get them in place.
+
+ cd setup
+ ./build-thirdparty.sh $PREFIX/thirdparty
+
+Note that this build script does NOT build rrdtool and its perl libraries.
+You can use install the rrdtool perl bindings from your OS package system,
+or you can run the setup scripts from
+L<SDBC|https://github.oetiker.ch/oetiker/sdbc> repository.
+
+With the dependencies in place, you can now attempt to run configure for the second time
+
+ cd /tmp/smokeping-3.0
+ ./configure --prefix=$PREFIX
+ make install
+
+=head2 Web setup
+
+For performance reasons the web api runs as a fastcgi client. There is a sample
+fcgi file in the $PREFIX/htdocs directory. Place it in a suitable location
+on your webserver. And configure apache appropriately. Eg.
+
+ # fcgid resource management
+ AddHandler fcgid-script     .fcgi
+
+For security reasons it would be sensible to configure Apache with suexec
+support so that the cgis do NOT run with the same user as the web server
+itself. This requires the fcgi script to be physically located in
+F</var/www> or below.
+
+Setup the following .htaccess file to be able to invoce the script
+directly from the website root
+
+ RewriteEngine On
+ RewriteBase /
+ RewriteCond %{REQUEST_FILENAME} !-f
+ RewriteRule (.*) smokeping.fcgi/$1 [L]
+
+=head1 CONFIGURATION
+
+The SmokePing system configuration is located in F<$PREFIX/etc/smokeping.cfg>.
+
+There is a sample configuration file in F<$PREFIX/etc/smokeping.cfg.dist>
+
+=head1 TESTING
+
+Since F<smokeping.pl probe> modifies data while it operates, you can use the
+
+  smokeping.pl probe --noaction --verbose
+
+start up switch run it without damaging files or data in the database
+and see an on-line account of what is happening.
+
+=head1 PRODUCTION USE
+
+To put SmokePing into production, make sure the probe daemon gets launched
+when the system starts.
+
+Also make sure you keep an eye (nagios ?) on the logfile (as configured in
+the config file), since it will report any error that occurs. On top of that
+errors will also be printed to STDERR which should trigger a mail from
+crond.
+
+=head1 HISTORY
+
+ 2013-09-04 to Initial Version
+
+=head1 AUTHOR
+
+Tobi Oetiker E<lt>tobi@oetiker.chE<gt>
+
+=cut
+
+# pod2text -l INSTALL.pod  >../../README.txt
+
+# Emacs Configuration
+#
+# Local Variables:
+# mode: cperl
+# eval: (cperl-set-style "PerlStyle")
+# mode: flyspell
+# mode: flyspell-prog
+# End:
+#

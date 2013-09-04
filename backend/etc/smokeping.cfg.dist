@@ -1,0 +1,146 @@
+*** General ***
+
+owner    = Peter Random
+contact  = some@address.nowhere
+mailhost = my.mail.host
+sendmail = /usr/sbin/sendmail
+# NOTE: do not put the Image Cache below cgi-bin
+# since all files under cgi-bin will be executed ... this is not
+# good for images.
+imgcache = /tmp/smokeping-31631-build/cache
+imgurl   = cache
+datadir  = /tmp/smokeping-31631-build/data
+piddir  = /tmp/smokeping-31631-build/var
+cgiurl   = http://some.url/smokeping.cgi
+smokemail = /tmp/smokeping-31631-build/etc/smokemail.dist
+tmail = /tmp/smokeping-31631-build/etc/tmail.dist
+# specify this to get syslog logging
+syslogfacility = local0
+# each probe is now run in its own process
+# disable this to revert to the old behaviour
+# concurrentprobes = no
+
+*** Alerts ***
+to = alertee@address.somewhere
+from = smokealert@company.xy
+
++someloss
+type = loss
+# in percent
+pattern = >0%,*12*,>0%,*12*,>0%
+comment = loss 3 times  in a row
+
+*** Database ***
+
+step     = 300
+pings    = 20
+
+# consfn mrhb steps total
+
+AVERAGE  0.5   1  1008
+AVERAGE  0.5  12  4320
+    MIN  0.5  12  4320
+    MAX  0.5  12  4320
+AVERAGE  0.5 144   720
+    MAX  0.5 144   720
+    MIN  0.5 144   720
+
+*** Presentation ***
+
+template = /tmp/smokeping-31631-build/etc/basepage.html.dist
+
++ charts
+
+menu = Charts
+title = The most interesting destinations
+
+++ stddev
+sorter = StdDev(entries=>4)
+title = Top Standard Deviation
+menu = Std Deviation
+format = Standard Deviation %f
+
+++ max
+sorter = Max(entries=>5)
+title = Top Max Roundtrip Time
+menu = by Max
+format = Max Roundtrip Time %f seconds
+
+++ loss
+sorter = Loss(entries=>5)
+title = Top Packet Loss
+menu = Loss
+format = Packets Lost %f
+
+++ median
+sorter = Median(entries=>5)
+title = Top Median Roundtrip Time
+menu = by Median
+format = Median RTT %f seconds
+
++ overview 
+
+width = 600
+height = 50
+range = 10h
+
++ detail
+
+width = 600
+height = 200
+unison_tolerance = 2
+
+"Last 3 Hours"    3h
+"Last 30 Hours"   30h
+"Last 10 Days"    10d
+"Last 400 Days"   400d
+
+#+ hierarchies
+#++ owner
+#title = Host Owner
+#++ location
+#title = Location
+
+*** Probes ***
+
++ FPing
+
+binary = /usr/sbin/fping
+
+*** Slaves ***
+secrets=/tmp/smokeping-31631-build/etc/smokeping_secrets.dist
++boomer
+display_name=boomer
+color=0000ff
+
++slave2
+display_name=another
+color=00ff00
+
+*** Targets ***
+
+probe = FPing
+
+menu = Top
+title = Network Latency Grapher
+remark = Welcome to the SmokePing website of xxx Company. \
+         Here you will learn all about the latency of our network.
+
++ Test
+menu= Targets
+#parents = owner:/Test/James location:/
+
+++ James
+
+menu = James
+title =James
+alerts = someloss
+slaves = boomer slave2
+host = james.address
+
+++ MultiHost
+
+menu = Multihost
+title = James and James as seen from Boomer
+host = /Test/James /Test/James~boomer
+

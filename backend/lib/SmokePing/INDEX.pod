@@ -1,0 +1,35 @@
+=head1 SMOKEPING
+
+Documentation Overview
+
+=over
+
+=item L<INSTALL|SmokePing::INSTALL>
+
+Installation Instructions
+
+=item L<smokeping.pl probe|SmokePing::Command::probe>
+
+run probing task
+
+=item L<smokeping.cfg|SmokePing::Cfg>
+
+Master configuration file.
+
+=back
+
+=head1 AUTHOR
+
+L<Tobias Oetiker|http://tobi.oetiker.ch>, 2013-09-04
+
+=cut
+
+# Emacs Configuration
+#
+# Local Variables:
+# mode: cperl
+# eval: (cperl-set-style "PerlStyle")
+# mode: flyspell
+# mode: flyspell-prog
+# End:
+#
