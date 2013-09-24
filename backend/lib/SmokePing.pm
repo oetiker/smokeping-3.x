@@ -23,7 +23,6 @@ use strict;
 use warnings;
 
 # load the two modules to have perl check them
-use Mojolicious::Plugin::QooxdooJsonrpc;
 use Mojo::URL;
 use Mojo::Util qw(hmac_sha1_sum slurp);
 
@@ -73,9 +72,6 @@ sub startup {
     # we have some more commands here
     unshift @{$self->commands->namespaces},'SmokePing::Command';
 
-    # fix woff type
-    $self->types->{woff} = 'application/x-font-woff';
-
     my $gcfg = $self->config->cfgHash->{General};
     $self->secret($gcfg->{mojo_secret});
     if ($self->mode ne 'development'){
@@ -100,7 +96,7 @@ sub startup {
 
     # prevent our cookies from colliding. Pick a separate cookie
     # for each config file
-    $self->sessions->cookie_name('SMOKEPIN_'.hmac_sha1_sum($self->config->file));
+    $self->sessions->cookie_name('SMOKEPING_'.hmac_sha1_sum($self->config->file));
 
     my $routes = $self->routes;
 
