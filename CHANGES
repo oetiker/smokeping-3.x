@@ -1,1 +1,60 @@
-this software is not released yet ... check the GIT history
+Configuration Changes from 2.x
+------------------------------
+
+* DYNAMIC hosts are not supported anymore
+
+Hosts with the DYNAMIC keyword are not supported anymore. If you want to
+ping a host with a dynamic IP, use a dynamic dns provider to get a stable
+dns name to use in your smokeping config. This also removes the dyndir and
+smokemail properties from the configuration.
+
+* parents property is gone
+
+The parents property for constructing alternate trees is not supported
+anymore. Use m-\S+ properties to provide additional information to the
+extopus frontend for organizing your data into trees.
+
+* menuextra is gone
+
+If you want to create links to external resources, you can configure the
+frontend to construct them and user m-\S+ properties to provide information.
+
+* imgurl,imgcache are gone
+
+If data has to be saved temporarily, it happens in the 'cachedir'
+
+* pagedir, linkstyle is gone
+
+Data presentation happens in extopus
+
+* sendmail is gone
+
+Smokeping uses the Mail::Sender module to submit mail directly to the
+mailserver.
+
+* cgiurl is gone
+
+The Smokeping Server does not need this information anymore
+
+* concurrentprobes is gone
+
+Probes do run concurrently
+
+* changecgiprogramname is gone
+
+Things are all based on mojolicious now, this setting does not apply anymore
+
+* tmail is gone
+
+For now tSmoke is not supported anymore. In the future
+this functionality may be added into extopus for online viewing.
+
+* Presentation is different
+
+The Presentation section of the configuration file has changed quite a lot
+since the data presentation part of smokeping has moved to extopus.
+All that is left in this section is some minimal configuration for
+influencing the extopus data display.
+
+
+
