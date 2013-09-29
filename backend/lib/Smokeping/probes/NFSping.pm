@@ -23,7 +23,7 @@ use Carp;
 sub pod_hash {
       return {
               name => <<DOC,
-Smokeping::probes::NFSping - NFSping Probe for SmokePing
+Smokeping::probes::NFSping - NFSping Probe for Smokeping
 DOC
               description => <<DOC,
 Integrates NFSping as a probe into smokeping. The variable B<binary> must 

@@ -2,11 +2,11 @@ package Smokeping::matchers::base;
 
 =head1 NAME
 
-Smokeping::matchers::base - Base Class for implementing SmokePing Matchers
+Smokeping::matchers::base - Base Class for implementing Smokeping Matchers
 
 =head1 OVERVIEW
  
-This is the base class for writing SmokePing matchers. Every matcher must
+This is the base class for writing Smokeping matchers. Every matcher must
 inherit from the base class and provide it's own methods for the 'business'
 logic.
 
@@ -54,7 +54,7 @@ sub new(@)
 =head2 Length
 
 The Length method returns the number of values the
-matcher will expect from SmokePing. This method must
+matcher will expect from Smokeping. This method must
 be overridden by the children of the base class.
 
 =cut

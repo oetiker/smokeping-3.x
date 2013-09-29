@@ -27,7 +27,7 @@ sub pod_hash {
 	my $e = "=";
 	return {
 		name => <<DOC,
-Smokeping::probes::CiscoRTTMonEchoICMP - Probe for SmokePing
+Smokeping::probes::CiscoRTTMonEchoICMP - Probe for Smokeping
 DOC
 		description => <<DOC,
 A probe for smokeping, which uses the ciscoRttMon MIB functionality ("Service Assurance Agent", "SAA") of Cisco IOS to measure ICMP echo ("ping") roundtrip times between a Cisco router and any IP address. 

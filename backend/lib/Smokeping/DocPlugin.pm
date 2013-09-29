@@ -1,4 +1,4 @@
-package SmokePing::DocPlugin;
+package Smokeping::DocPlugin;
 use strict;  
 use warnings;
 
@@ -13,7 +13,7 @@ use Mojo::Asset::File;
 use Mojo::ByteStream 'b';
 use Mojo::DOM;
 use Mojo::Util 'url_escape';
-use SmokePing::Config;
+use Smokeping::Config;
 use Pod::Simple::HTML;
 use Pod::Simple::Search;
 
@@ -56,8 +56,25 @@ sub register {
       my $html;
       my $cpan = 'http://search.cpan.org/perldoc';
       $module =~ s/\//\:\:/g;      
-      if ($module eq 'SmokePing::Cfg'){
-          $html = _pod_to_html(SmokePing::Config->pod);
+      if ($module eq 'Smokeping::Cfg'){
+          $html = _pod_to_html($app->config->pod);
+      }
+      elsif ($module =~  /^Smokeping::probes::(.+)$/){
+          my $probeModule = $1;
+          eval {
+              require 'Smokeping/probes/'.${probeModule}.'.pm';    
+          };
+          if ($@){
+              $app->log->error("Loading Smokeping::probes::$probeModule: $@");
+              exit 1;
+          }
+          no strict 'refs';
+          my $class = 'Smokeping::probes::'.$probeModule;
+               
+          # for this to work, we need a quoted string here, not something
+          # like 'xxx::'.$value as -> is binding more strongly than .
+          # modify the grammar
+          $html = _pod_to_html($class->pod);
       }
       else {
           my $path;
@@ -76,7 +93,7 @@ sub register {
       my $perldoc = $self->url_for($root.'/');
       $dom->find('a[href]')->each(
         sub {
-          my $attrs = shift->attrs;
+          my $attrs = shift->attr;
           if ($attrs->{href} =~ /^$cpan/) {
             $attrs->{href} =~ s/^$cpan\?/$perldoc/;
             $attrs->{href} =~ s/%3A%3A/\//gi;
@@ -161,13 +178,13 @@ __END__
 
 =head1 NAME
 
-SmokePing::DocPlugin - IpLog Documentation Plugin
+Smokeping::DocPlugin - IpLog Documentation Plugin
 
 =head1 SYNOPSIS
 
-  $self->plugin('SmokePing::DocPlugin',{
+  $self->plugin('Smokeping::DocPlugin',{
       root => '/doc',
-      index => 'SmokePing::INDEX',
+      index => 'Smokeping::INDEX',
       template => Mojo::Asset::File->new(
           path=>$self->home->rel_file('templates/doc.html.ep')
       )->slurp,
@@ -211,7 +228,7 @@ Render POD to HTML.
 
 =head1 METHODS
 
-L<SmokePing::DocPlugin> inherits all methods from
+L<Smokeping::DocPlugin> inherits all methods from
 L<Mojolicious::Plugin> and implements the following new ones.
 
 =head2 C<register>

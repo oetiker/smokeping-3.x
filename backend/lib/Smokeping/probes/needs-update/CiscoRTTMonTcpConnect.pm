@@ -27,7 +27,7 @@ sub pod_hash {
 	my $e = "=";
 	return {
 		name => <<DOC,
-Smokeping::probes::CiscoRTTMonTcpConnect - Probe for SmokePing
+Smokeping::probes::CiscoRTTMonTcpConnect - Probe for Smokeping
 DOC
 		description => <<DOC,
 A probe for smokeping, which uses the ciscoRttMon MIB functionality ("Service Assurance Agent", "SAA") of Cisco IOS to measure TCP connect times between a Cisco router and a TCP server. The measured value is the time is the time to establish a TCP session, i.e. the time between the initial "SYN" TCP packet of the router and the "SYN ACK" packet of the host. The router terminates the TCP session immediately after the reception of "SYN ACK" with a "FIN" packet.

@@ -23,7 +23,7 @@ use Carp;
 sub pod_hash {
       return {
               name => <<DOC,
-Smokeping::probes::TCPPing - TCPPing Probe for SmokePing
+Smokeping::probes::TCPPing - TCPPing Probe for Smokeping
 DOC
               description => <<DOC,
 Integrates TCPPing as a probe into smokeping. The variable B<binary> must

@@ -23,7 +23,7 @@ use Carp;
 sub pod_hash {
 	return {
 		name => <<DOC,
-Smokeping::probes::DNS - Name Service Probe for SmokePing
+Smokeping::probes::DNS - Name Service Probe for Smokeping
 DOC
 		description => <<DOC,
 Integrates dig as a probe into smokeping. The variable B<binary> must

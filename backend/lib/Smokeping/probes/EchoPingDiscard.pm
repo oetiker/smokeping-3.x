@@ -17,10 +17,10 @@ to generate the POD document.
 sub pod_hash {
 	return {
 		name => <<DOC,
-Smokeping::probes::EchoPingDiscard - an echoping(1) probe for SmokePing
+Smokeping::probes::EchoPingDiscard - an echoping(1) probe for Smokeping
 DOC
 		overview => <<DOC,
-Measures TCP or UDP discard (port 9) roundtrip times for SmokePing.
+Measures TCP or UDP discard (port 9) roundtrip times for Smokeping.
 DOC
 		authors => <<'DOC',
 Niko Tyni <ntyni@iki.fi>

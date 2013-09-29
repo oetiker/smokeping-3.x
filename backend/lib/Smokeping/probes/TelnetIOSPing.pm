@@ -24,7 +24,7 @@ my $e = "=";
 sub pod_hash {
 	return {
 		name => <<DOC,
-Smokeping::probes::TelnetIOSPing - Cisco IOS Probe for SmokePing
+Smokeping::probes::TelnetIOSPing - Cisco IOS Probe for Smokeping
 DOC
 		description => <<DOC,
 Integrates Cisco IOS as a probe into smokeping.  Uses the telnet protocol 

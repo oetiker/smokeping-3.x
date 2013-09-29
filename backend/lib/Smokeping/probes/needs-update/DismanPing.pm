@@ -26,7 +26,7 @@ sub pod_hash {
     my $e = "=";
     return {
         name => <<DOC,
-Smokeping::probes::DismanPing - DISMAN-PING-MIB Probe for SmokePing
+Smokeping::probes::DismanPing - DISMAN-PING-MIB Probe for Smokeping
 DOC
         description => <<DOC,
 Uses the DISMAN-PING-MIB to cause a remote system to send probes.
@@ -123,7 +123,7 @@ sub probevars {
                 },
                 _doc => <<DOC,
 How many pings should be sent to each target. Note that the maximum value
-for DismanPing MIP is 15, which is less than the SmokePing default, so this
+for DismanPing MIP is 15, which is less than the Smokeping default, so this
 class has its own default value.  If your Database section specifies a
 value less than 15, you must also set it for this probe.
 Note that the number of pings in

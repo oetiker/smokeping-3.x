@@ -21,11 +21,11 @@ use Carp;
 sub pod_hash {
 	return {
 		name => <<DOC,
-Smokeping::probes::EchoPingIcp - an echoping(1) probe for SmokePing
+Smokeping::probes::EchoPingIcp - an echoping(1) probe for Smokeping
 DOC
 		overview => <<DOC,
 Measures ICP (Internet Cache Protocol, spoken by web caches)
-roundtrip times for SmokePing.
+roundtrip times for Smokeping.
 DOC
 		notes => <<DOC,
 The I<fill>, I<size> and I<udp> EchoPing variables are not valid.

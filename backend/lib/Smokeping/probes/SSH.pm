@@ -24,7 +24,7 @@ use Time::HiRes qw(gettimeofday tv_interval);
 sub pod_hash {
 	return {
 		name => <<DOC,
-Smokeping::probes::SSH - Secure Shell Probe for SmokePing
+Smokeping::probes::SSH - Secure Shell Probe for Smokeping
 DOC
 		description => <<DOC,
 Integrates ssh-keyscan as a probe into smokeping. The variable B<binary> must

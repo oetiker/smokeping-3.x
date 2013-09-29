@@ -21,10 +21,10 @@ use Carp;
 sub pod_hash {
 	return {
 		name => <<DOC,
-Smokeping::probes::EchoPingSmtp - an echoping(1) probe for SmokePing
+Smokeping::probes::EchoPingSmtp - an echoping(1) probe for Smokeping
 DOC
 		overview => <<DOC,
-Measures SMTP roundtrip times (mail servers) for SmokePing.
+Measures SMTP roundtrip times (mail servers) for Smokeping.
 DOC
 		notes => <<DOC,
 The I<fill>, I<size> and I<udp> EchoPing variables are not valid.

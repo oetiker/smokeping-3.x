@@ -21,10 +21,10 @@ use Carp;
 sub pod_hash {
 	return {
 		name => <<DOC,
-Smokeping::probes::EchoPingHttp - an echoping(1) probe for SmokePing
+Smokeping::probes::EchoPingHttp - an echoping(1) probe for Smokeping
 DOC
 		overview => <<DOC,
-Measures HTTP roundtrip times (web servers and caches) for SmokePing.
+Measures HTTP roundtrip times (web servers and caches) for Smokeping.
 DOC
 		notes => <<DOC,
 You should consider setting a lower value for the C<pings> variable than the

@@ -21,11 +21,11 @@ use Carp;
 sub pod_hash {
 	return {
 		name => <<DOC,
-Smokeping::probes::EchoPingHttps - an echoping(1) probe for SmokePing
+Smokeping::probes::EchoPingHttps - an echoping(1) probe for Smokeping
 DOC
 		overview => <<DOC,
 Measures HTTPS (HTTP over SSL) roundtrip times (web servers and caches) for
-SmokePing.
+Smokeping.
 DOC
 		description => <<DOC,
 As EchoPingHttp(3pm), but SSL-enabled.

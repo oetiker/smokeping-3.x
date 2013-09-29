@@ -17,10 +17,10 @@ to generate the POD document.
 sub pod_hash {
 	return {
 		name => <<DOC,
-Smokeping::probes::EchoPingPlugin - a basis for using echoping(1) plugins as probes for SmokePing
+Smokeping::probes::EchoPingPlugin - a basis for using echoping(1) plugins as probes for Smokeping
 DOC
 		overview => <<DOC,
-Measures roundtrip times for SmokePing with an echoping(1) plugin. The plugins
+Measures roundtrip times for Smokeping with an echoping(1) plugin. The plugins
 currently shipped with echoping are implemented as separate probes based
 on this class, but the class can also be used directly.
 DOC

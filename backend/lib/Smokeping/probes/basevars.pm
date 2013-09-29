@@ -22,7 +22,7 @@ my $e = "=";
 sub pod_hash {
     return {
     	name => <<DOC,
-Smokeping::probes::basevars - Another Base Class for implementing SmokePing Probes
+Smokeping::probes::basevars - Another Base Class for implementing Smokeping Probes
 DOC
 	overview => <<DOC,
 Like L<Smokeping::probes::base|Smokeping::probes::base>, but supports host-specific variables for the probe.

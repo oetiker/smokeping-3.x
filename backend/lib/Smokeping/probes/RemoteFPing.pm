@@ -17,7 +17,7 @@ to generate the POD document.
 sub pod_hash {
 	return {
 		name => <<DOC,
-Smokeping::probes::RemoteFPing - Remote FPing Probe for SmokePing
+Smokeping::probes::RemoteFPing - Remote FPing Probe for Smokeping
 DOC
 		description => <<DOC,
 Integrates the remote execution of FPing via ssh/rsh into smokeping.

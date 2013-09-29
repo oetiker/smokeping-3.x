@@ -34,13 +34,13 @@ my $DEFAULTINTERVAL = 1;
 sub pod_hash {
 	return {
 		name => <<DOC,
-Smokeping::probes::LDAP - a LDAP probe for SmokePing
+Smokeping::probes::LDAP - a LDAP probe for Smokeping
 DOC
 		overview => <<DOC,
-Measures LDAP search latency for SmokePing
+Measures LDAP search latency for Smokeping
 DOC
 		description => <<DOC,
-This probe measures LDAP query latency for SmokePing.
+This probe measures LDAP query latency for Smokeping.
 The query is specified by the target-specific variable `filter' and,
 optionally, by the target-specific variable `base'. The attributes 
 queried can be specified in the comma-separated list `attrs'.

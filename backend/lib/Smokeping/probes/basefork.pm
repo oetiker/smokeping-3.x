@@ -27,7 +27,7 @@ my $DEFAULTFORKS = 5;
 sub pod_hash {
     return {
     	name => <<DOC,
-Smokeping::probes::basefork - Yet Another Base Class for implementing SmokePing Probes
+Smokeping::probes::basefork - Yet Another Base Class for implementing Smokeping Probes
 DOC
 	overview => <<DOC,
 Like Smokeping::probes::basevars, but supports the probe-specific property `forks'
@@ -39,7 +39,7 @@ DOC
 Not all pinger programs support testing multiple hosts in a single go like
 fping(1). If the measurement takes long enough, there may be not enough time 
 perform all the tests in the time available. For example, if the test takes
-30 seconds, measuring ten hosts already fills up the SmokePing default 
+30 seconds, measuring ten hosts already fills up the Smokeping default 
 five minute step.
 
 Thus, it may be necessary to do some of the tests concurrently. This module

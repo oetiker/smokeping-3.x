@@ -1,15 +1,15 @@
-package SmokePing;
+package Smokeping;
 
 =head1 NAME
 
-SmokePing - SmokePing Application
+Smokeping - Smokeping Application
 
 =head1 SYNOPSIS
 
- use SmokePing;
+ use Smokeping;
  use Mojolicious::Commands;
 
- Mojolicious::Commands->start_app('SmokePing');
+ Mojolicious::Commands->start_app('Smokeping');
 
 =head1 DESCRIPTION
 
@@ -26,18 +26,16 @@ use warnings;
 use Mojo::URL;
 use Mojo::Util qw(hmac_sha1_sum slurp);
 
-use SmokePing::Command::daemon;
-
-use SmokePing::Config;
-use SmokePing::DocPlugin;
-use SmokePing::SlaveAPI;
-use SmokePing::FrontendAPI;
+use Smokeping::Config;
+use Smokeping::DocPlugin;
+# use Smokeping::SlaveAPI;
+# use Smokeping::FrontendAPI;
 
 use Mojo::Base 'Mojolicious';
 
 =head2 config
 
-A hash pointer to the configuration object. See L<IpLog::Config> for details.
+A hash pointer to the configuration object. See L<Smokeping::Config> for details.
 The default configuration file is located in etc/system.cfg. You can override the
 path by setting the C<{SMOKEPING_CONF> environment variable.
 
@@ -47,7 +45,7 @@ The config property is set automatically on startup.
 
 has 'config' => sub {
     my $self = shift;
-    my $conf = IpLog::Config->new( 
+    my $conf = Smokeping::Config->new( 
         app => $self,
         file => $ENV{SMOKEPING_CONF} || $self->home->rel_file('etc/smokeping.cfg' )
     );
@@ -70,9 +68,16 @@ sub startup {
     my $me = $self;
 
     # we have some more commands here
-    unshift @{$self->commands->namespaces},'SmokePing::Command';
+    unshift @{$self->commands->namespaces},'Smokeping::Command';
 
-    my $gcfg = $self->config->cfgHash->{General};
+    
+    my $gcfg = eval { $self->config->cfgHash->{General} } or do {
+        my $error = $@;
+        $error =~ s/at\s.+\sline\s\d+$//;
+        print STDERR "ERROR: $error";
+        exit 1;
+    };
+
     $self->secret($gcfg->{mojo_secret});
     if ($self->mode ne 'development'){
         $self->log->path($gcfg->{log_file});
@@ -100,9 +105,9 @@ sub startup {
 
     my $routes = $self->routes;
 
-    $self->plugin('SmokePing::DocPlugin', {
+    $self->plugin('Smokeping::DocPlugin', {
         root => '/doc',
-        index => 'SmokePing::INDEX',
+        index => 'Smokeping::INDEX',
         localguide => $gcfg->{localguide},
         template => Mojo::Asset::File->new(
             path=>$self->home->rel_file('templates/doc.html.ep')

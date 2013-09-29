@@ -1,21 +1,21 @@
-package SmokePing::Config;
+package Smokeping::Config;
 
 =head1 NAME
 
-SmokePing::Config - The SmnokePing Config Reader Class
+Smokeping::Config - The SmnokePing Config Reader Class
 
 =head1 SYNOPSIS
 
- use SmokePing::Config;
+ use Smokeping::Config;
 
- my $config = SmokePing::Config->new(file=>'/etc/smokeping.conf);
+ my $config = Smokeping::Config->new(file=>'/etc/smokeping.conf);
 
  my $cfg = $config->cfgHash();
  my $pod = $config->pod();
 
 =head1 DESCRIPTION
 
-Configuration reader Class for SmokePing
+Configuration reader Class for Smokeping
 
 =head1 PROPERTIES
 
@@ -23,9 +23,10 @@ Configuration reader Class for SmokePing
 
 use Mojo::Base -base;
 use Mojo::Util qw(hmac_sha1_sum);
-use Storable qw(dclone);
+use Socket qw(getaddrinfo);
 use Carp;
 use Config::Grammar::Dynamic;
+use Smokeping::probes::base;
 
 use POSIX qw(strftime);
 
@@ -44,6 +45,14 @@ the app object
 =cut
 
 has app => sub { croak "provide an app object" };
+
+=head2 log
+
+quick access to the log object
+
+=cut
+
+has log => sub { shift->app->log };
 
 =head2 cfgHash
 
@@ -73,7 +82,7 @@ has pod => sub {
     my $header = <<"HEADER_END";
 ${E}head1 NAME
 
-smokeping.cfg - The SmokePing configuration file
+smokeping.cfg - The Smokeping configuration file
 
 ${E}head1 SYNOPSIS
 
@@ -131,21 +140,22 @@ Create a smokeping config parser.
 
 =cut
 
+
 sub _make_parser {
     my $self = shift;
     my $E = '=';
 
     my $KEYD_RE = '[-_0-9a-zA-Z]+';
     my $KEYDD_RE = '[-_0-9a-zA-Z.]+';
+    my $PROBE_RE = '[A-Z][a-zA-Z]+';
 
     my $pluginMap = {};
-
     for my $type (qw(probes matchers sorters)){
         for my $path (@INC){
-            for my $file (glob($path.'/SmokePing/'.$type.'/[A-Z]*.pm')){
+            for my $file (glob($path.'/Smokeping/'.$type.'/[A-Z]*.pm')){
                 my $plugin = $file;
-                $plugin =~ s{.*/SmokePing/$type/(.*)\.pm}{$1};
-                $probeList->{$type}{$plugin} =  "(See the L<separate module documentation|Smokeping::$type::$plugin> for detailed Information about each variable.)";
+                $plugin =~ s{.*/Smokeping/$type/(.*)\.pm}{$1};
+                $pluginMap->{$type}{$plugin} =  "(See the L<separate module documentation|Smokeping::${type}::${plugin}> for detailed Information about each variable.)"
             }
         }
     }
@@ -175,6 +185,8 @@ sub _make_parser {
     # 2.4 A _sub sub is installed for the 'probe' variable in target subsections that
     #     bombs out if 'probe' is defined after any variables that depend on the
     #     current 'probe' setting.
+
+    my %knownprobes; # the probes encountered so far
 
 
     # The target-specific vars of each probe
@@ -219,7 +231,6 @@ DOC
             _re => '([^\s,]+(,[^\s,]+)*)?',
             _re_error => 'Comma separated list of alert names',
         },
-        '/
         hide      => {
             _doc => <<DOC,
 Set the hide property to 'yes' to hide this host from the navigation menu
@@ -276,33 +287,14 @@ DOC
 
             _sub => sub {
                 for ( shift ) {
+                    # if we don't need name lookup, all is well ... 
                     /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/ && return undef;
                     /^[0-9a-f]{0,4}(\:[0-9a-f]{0,4}){0,6}\:[0-9a-f]{0,4}$/i && return undef;
                     m|(?:/$KEYD_RE)+(?:~$KEYD_RE)?(?: (?:/$KEYD_RE)+(?:~$KEYD_RE))*| && return undef;
-                    my $addressfound = 0;
-                    my @tried;
-                    if ($havegetaddrinfo) {
-                        my @ai;
-                        @ai = getaddrinfo( $_, "" );
-                        unless ($addressfound = scalar(@ai) > 5) {
-                            do_debuglog("WARNING: Hostname '$_' does currently not resolve to an IPv6 address\n");
-                            @tried = qw{IPv6};
-                        }
-                    }
-                    unless ($addressfound) {
-                        unless ($addressfound = gethostbyname( $_ )) {
-                            do_debuglog("WARNING: Hostname '$_' does currently not resolve to an IPv4 address\n");
-                            push @tried, qw{IPv4};
-                        }
-                    }
-                    unless ($addressfound) {
-                        # do not bomb, as this could be temporary
-                        my $tried = join " or ", @tried;
-                        warn "WARNING: Hostname '$_' does currently not resolve to an $tried address\n";
-                    }
+                    my ($err,@ai) = getaddrinfo( $_ );
+                    $self->log->warn("resolving hostname '$_' from config file: $err\n") if $err;
                     return undef;
                 }
-                return undef;
             },
         },
         email => { 
@@ -373,7 +365,7 @@ DOC
                 # see 2.2 above
                 my ($name, $val, $grammar) = @_;
 
-                my $targetvars = dclone($storedtargetvars{$val});
+                my $targetvars = _cfgClone($storedtargetvars{$val});
                 my @mandatory = @{$targetvars->{_mandatory}};
                 delete $targetvars->{_mandatory};
                 my @targetvars = sort keys %$targetvars;
@@ -382,11 +374,11 @@ DOC
                 delete $targetvars->{$_}{_default} for @targetvars;
 
                 # we replace the current grammar altogether
-                %$grammar = ( %{_deepcopy($TARGETCOMMON)}, %$targetvars ); 
+                %$grammar = ( %{_cfgClone($TARGETCOMMON)}, %$targetvars ); 
                 $grammar->{_vars} = [ @{$grammar->{_vars}}, @targetvars ];
 
                 # the subsections differ only in that they inherit their vars from here
-                my $g = _deepcopy($grammar);
+                my $g = _cfgClone($grammar);
                 $grammar->{"/$KEYD_RE/"} = $g;
                 push @{$g->{_inherited}}, @targetvars;
 
@@ -398,7 +390,7 @@ DOC
                     my ($name, $val, $grammar) = @_;
                     $grammar->{_mandatory} = [ @mandatory ];
                 };
-                $grammar->{host} = _deepcopy($grammar->{host});
+                $grammar->{host} = _cfgClone($grammar->{host});
                 $grammar->{host}{_dyn} = $mandatorysub;
                 $g->{host}{_dyn} = $mandatorysub;
             },
@@ -442,13 +434,27 @@ DOC
         _dyn => sub {
             my ($re, $name, $grammar) = @_;
 
+            my $probevars;
+            my $targetvars;
             # load the probe module
-            my $class = "Smokeping::probes::$name";
-            Smokeping::maybe_require $class;
-
-            # modify the grammar
-            my $probevars = $class->probevars;
-            my $targetvars = $class->targetvars;
+            eval {
+                require 'Smokeping/probes/'.${name}.'.pm';    
+            };
+            if ($@){
+                $self->log->error("Loading $name: $@");
+                exit 1;
+            }
+            do {
+                no strict 'refs';
+                my $class = 'Smokeping::probes::'.$name;
+                    
+                # for this to work, we need a quoted string here, not something
+                # like 'xxx::'.$value as -> is binding more strongly than .
+                # modify the grammar
+                $probevars = $class->probevars;
+                $targetvars = $class->targetvars;
+            };
+            
             $storedtargetvars{$name} = $targetvars;
                 
             my @mandatory = @{$probevars->{_mandatory}};
@@ -516,7 +522,7 @@ DOC
                 # this also keeps track of the real module name for each subprobe,
                 # should we ever need it
                 $knownprobes{$subprobename} = $name;
-                my $subtargetvars = _deepcopy($targetvars);
+                my $subtargetvars = _cfgClone($targetvars);
                 $storedtargetvars{$subprobename} = $subtargetvars;
                 # make any mandatory variable specified here non-mandatory in the Targets section
                 # see 1.4 above
@@ -530,7 +536,7 @@ DOC
                 }
             }
         },
-        _dyndoc => $probelist, # all available probes
+        _dyndoc => $pluginMap->{probes}, # all available probes
         _sections => [ "/$KEYD_RE/" ],
         "/$KEYD_RE/" => {
             _doc => <<DOC,
@@ -566,20 +572,20 @@ DOC
     }; # $PROBES
 
 
-    my $parser = Config::Grammer::Dynamic->new ({
+    my $parser = Config::Grammar::Dynamic->new ({
         _sections  => [ qw(General Database Presentation Probes Targets Alerts Slaves) ],
         _mandatory => [ qw(General Database Presentation Probes Targets) ],
         General => {
             _doc => <<DOC,
-General configuration values valid for the whole SmokePing setup.
+General configuration values valid for the whole Smokeping setup.
 DOC
             _vars => [ qw(owner cachedir datadir piddir offset
                 mailhost snpphost contact display_name
-                syslogfacility syslogpriority concurrentprobes changeprocessnames tmail
+                syslogfacility concurrentprobes changeprocessnames tmail
                 changecgiprogramname linkstyle precreateperms ) 
             ],
 
-            _mandatory => [ qw(owner contact cachedir datadir piddi) ],
+            _mandatory => [ qw(owner contact cachedir datadir piddir) ],
             cachedir => { 
                 %$DIRCHECK_SUB,
                 _doc => <<DOC,
@@ -624,14 +630,14 @@ DOC
             datadir  => {
                 %$DIRCHECK_SUB,
                 _doc => <<DOC,
-The directory where SmokePing can keep its rrd files.
+The directory where Smokeping can keep its rrd files.
 DOC
             },
             piddir  => {
                 %$DIRCHECK_SUB,
                 _default => '/var/run',
                 _doc => <<DOC,
-The directory where SmokePing keeps its pid when daemonised.
+The directory where Smokeping keeps its pid when daemonised.
 DOC
              },
              precreateperms => {
@@ -652,14 +658,6 @@ DOC
                     _doc => <<DOC,
 The syslog facility to use, eg. local0...local7. 
 Note: syslog logging is only used if you specify this.
-DOC
-                },
-                syslogpriority => {
-                    _re => '\w+',
-                    _re_error => "syslogpriority must be alphanumeric",
-                    _doc => <<DOC,
-The syslog priority to use, eg. debug, notice or info. 
-Default is $DEFAULTPRIORITY.
 DOC
                 },
                 offset => {
@@ -693,15 +691,15 @@ DOC
                 _mandatory => [ qw(step pings) ],
                 _doc => <<DOC,
 Describes the properties of the round robin database for storing the
-SmokePing data. Note that it is not possible to edit existing RRDs
+Smokeping data. Note that it is not possible to edit existing RRDs
 by changing the entries in the cfg file.
 DOC
          
                 step   => { 
                     %$INTEGER_SUB,
                     _doc => <<DOC,
-Duration of the base operation interval of SmokePing in seconds.
-SmokePing will venture out every B<step> seconds to ping your target hosts.
+Duration of the base operation interval of Smokeping in seconds.
+Smokeping will venture out every B<step> seconds to ping your target hosts.
 If 'concurrent_probes' is set to 'yes' (see above), this variable can be 
 overridden by each probe. Note that the step in the RRD files is fixed when 
 they are originally generated, and if you change the step parameter afterwards, 
@@ -732,7 +730,7 @@ DOC
                _table => {
                     _doc => <<DOC,
 This section also contains a table describing the setup of the
-SmokePing database. Below are reasonable defaults. Only change them if
+Smokeping database. Below are reasonable defaults. Only change them if
 you know rrdtool and its workings. Each row in the table describes one RRA.
 
  # cons   xff steps rows
@@ -781,15 +779,15 @@ DOC
             Presentation => { 
                 _doc => <<DOC,
 The actual presentation of smokeping data happens in extopus. This
-section provides input to the extopus SmokePing plugin and defines some
-special items Defines how the SmokePing data should be presented.
+section provides input to the extopus Smokeping plugin and defines some
+special items Defines how the Smokeping data should be presented.
 DOC
                 _sections => [ qw(overview detail charts multihost hierarchies) ],
                 _mandatory => [ qw(overview template detail) ],
                 _vars      => [ qw (template charset) ],
                 charts => {
                     _doc => <<DOC,
-The SmokePing Charts feature allow you to have Top X tables created according
+The Smokeping Charts feature allow you to have Top X tables created according
 to various criteria.
 
 Each type of Chart must live in its own subsection.
@@ -895,7 +893,7 @@ DOC
                             _columns => 3,
                             _doc => <<DOC,
 In the Detail view, the color of the median line depends
-the amount of lost packets. SmokePing comes with a reasonable default setting,
+the amount of lost packets. Smokeping comes with a reasonable default setting,
 but you may choose to disagree. The table below
 lets you specify your own coloring.
 
@@ -932,10 +930,10 @@ DOC
                     uptime_colors => {
                         _table     => { _columns => 3,
                         _doc => <<DOC,
-When monitoring a host with DYNAMIC addressing, SmokePing will keep
+When monitoring a host with DYNAMIC addressing, Smokeping will keep
 track of how long the machine is able to keep the same IP
 address. This time is plotted as a color in the graphs
-background. SmokePing comes with a reasonable default setting, but you
+background. Smokeping comes with a reasonable default setting, but you
 may choose to disagree. The table below lets you specify your own
 coloring
 
@@ -992,7 +990,7 @@ DOC
             _sections => [ "/$KEYD_RE/" ],
             _doc => <<DOC,
 The Probes Section configures Probe modules. Probe modules integrate
-an external ping command into SmokePing. Check the documentation of each
+an external ping command into Smokeping. Check the documentation of each
 module for more information about it.
 DOC
             "/$KEYD_RE/" => $PROBES,
@@ -1000,7 +998,7 @@ DOC
         Alerts  => {
             _doc => <<DOC,
 The Alert section lets you setup loss and RTT pattern detectors. After each
-round of polling, SmokePing will examine its data and determine which
+round of polling, Smokeping will examine its data and determine which
 detectors match. Detectors are enabled per target and get inherited by
 the targets children.
 
@@ -1124,6 +1122,7 @@ DOC
                 _re_error =>"this must either be 'yes' or 'no'",
                 _default => 'no',
             },
+
             mailtemplate => {
                 _doc => <<DOC,
 When sending out mails for alerts, smokeping normally uses an internally
@@ -1159,6 +1158,7 @@ DOC
                     return undef;
                 },
             },
+
             '/[^\s,]+/' => {
                 _vars => [ qw(type pattern comment to edgetrigger mailtemplate priority) ],
                 _inherited => [ qw(edgetrigger mailtemplate) ],
@@ -1177,11 +1177,9 @@ DOC
 Currently the pattern types B<rtt> and B<loss> and B<matcher> are known. 
 
 Matchers are plugin modules that extend the alert conditions.  Known
-matchers are @{[join (", ", map { "L<$_|Smokeping::matchers::$_>" }
-@matcherlist)]}.
+matchers are @{[join (", ", map { "L<$_|Smokeping::matchers::$_>" } @{[keys %{$pluginMap->{matchers}}]})]}.
 
-See the documentation of the corresponding matcher module
-(eg. L<Smokeping::matchers::$matcherlist[0]>) for instructions on
+See the documentation of the corresponding matcher module for instructions on
 configuring it.
 DOC
                     _re => '(rtt|loss|matcher)',
@@ -1305,7 +1303,7 @@ END_DOC
         },
         Targets => {
             _doc        => <<DOC,
-The Target Section defines the actual work of SmokePing. It contains a
+The Target Section defines the actual work of Smokeping. It contains a
 hierarchical list of hosts which mark the endpoints of the network
 connections the system should monitor. Each section can contain one host as
 well as other sections. By adding slaves you can measure the connection to
@@ -1317,78 +1315,79 @@ DOC
             _sections   => [ "/$KEYD_RE/" ],
             _recursive  => [ "/$KEYD_RE/" ],
             "/$KEYD_RE/" => $TARGETCOMMON, # this is just for documentation, _dyn() below replaces it
-                probe => { 
-                    _doc => <<DOC,
+            probe => { 
+               _doc => <<DOC,
 The name of the probe module to be used for this host. The value of
 this variable gets propagated
 DOC
-                    _sub => sub {
-                        my $val = shift;
-                        return "probe $val missing from the Probes section"
-                            unless $knownprobes{$val};
-                        return undef;
-                    },
-                    # create the syntax based on the selected probe.
-                    # see 2.1 above
-                    _dyn => sub {
-                        my ($name, $val, $grammar) = @_;
+               _sub => sub {
+                    my $val = shift;
+                    return "probe $val missing from the Probes section"
+                        unless $knownprobes{$val};
+                    return undef;
+               },
+               # create the syntax based on the selected probe.
+               # see 2.1 above
+               _dyn => sub {
+                    my ($name, $val, $grammar) = @_;
 
-                        my $targetvars = _deepcopy($storedtargetvars{$val});
-                        my @mandatory = @{$targetvars->{_mandatory}};
-                        delete $targetvars->{_mandatory};
-                        my @targetvars = sort keys %$targetvars;
-                        for (@targetvars) {
-                            # the default values for targetvars are only used in the Probes section
-                            delete $targetvars->{$_}{_default};
-                            $grammar->{$_} = $targetvars->{$_};
-                         }
-                         push @{$grammar->{_vars}}, @targetvars;
-                         my $g = { %{_deepcopy($TARGETCOMMON)}, %{_deepcopy($targetvars)} };
-                         $grammar->{"/$KEYD_RE/"} = $g;
-                         $g->{_vars} = [ @{$g->{_vars}}, @targetvars ];
-                         $g->{_inherited} = [ @{$g->{_inherited}}, @targetvars ];
-                         # this makes the reference manual a bit less cluttered 
-                         for (@targetvars){
-                            $g->{$_}{_doc} = 'see above';
-                            $grammar->{$_}{_doc} = 'see above';
-                            delete $grammar->{$_}{_example};
-                            delete $g->{$_}{_example};
-                         }
-                         # make the mandatory variables mandatory only in sections
-                         # with 'host' defined
-                         # see 2.3 above
-                         $g->{host}{_dyn} = sub {
-                            my ($name, $val, $grammar) = @_;
-                            $grammar->{_mandatory} = [ @mandatory ];
-                         };
-                    }, # _dyn
-                    _dyndoc => $probelist, # all available probes
-                }, #probe
-                menu => { _doc => <<DOC },
+                    my $targetvars = _cfgClone($storedtargetvars{$val});
+#use Data::Dumper;
+#                    $self->log->info("$name $val ".Dumper(\%storedtargetvars));
+                    my @mandatory = @{$targetvars->{_mandatory}};
+                    delete $targetvars->{_mandatory};
+                    my @targetvars = sort keys %$targetvars;
+                    for (@targetvars) {
+                        # the default values for targetvars are only used in the Probes section
+                        delete $targetvars->{$_}{_default};
+                        $grammar->{$_} = $targetvars->{$_};
+                    }
+                    push @{$grammar->{_vars}}, @targetvars;
+                    my $g = { %{_cfgClone($TARGETCOMMON)}, %{_cfgClone($targetvars)} };
+                    $grammar->{"/$KEYD_RE/"} = $g;
+                    $g->{_vars} = [ @{$g->{_vars}}, @targetvars ];
+                    $g->{_inherited} = [ @{$g->{_inherited}}, @targetvars ];
+                    # this makes the reference manual a bit less cluttered 
+                    for (@targetvars){
+                        $g->{$_}{_doc} = 'see above';
+                        $grammar->{$_}{_doc} = 'see above';
+                        delete $grammar->{$_}{_example};
+                        delete $g->{$_}{_example};
+                    }
+                    # make the mandatory variables mandatory only in sections
+                    # with 'host' defined
+                    # see 2.3 above
+                    $g->{host}{_dyn} = sub {
+                        my ($name, $val, $grammar) = @_;
+                        $grammar->{_mandatory} = [ @mandatory ];
+                    };
+                }, # _dyn
+                _dyndoc => $pluginMap->{probes}, # all available probes
+            }, #probe
+            menu => { _doc => <<DOC },
 Menu entry for this section. If not set this will be set to the hostname.
 DOC
-                alerts => { _doc => <<DOC },
+            alerts => { _doc => <<DOC },
 A comma separated list of alerts to check for this target. The alerts have
 to be setup in the Alerts section. Alerts are inherited by child nodes. Use
 an empty alerts definition to remove inherited alerts from the current target
 and its children.
 
 DOC
-                title => { _doc => <<DOC },
+            title => { _doc => <<DOC },
 Title of the page when it is displayed. This will be set to the hostname if
 left empty.
 DOC
 
-                remark => { _doc => <<DOC },
+            remark => { _doc => <<DOC },
 An optional remark on the current section. It gets displayed on the webpage.
 DOC
-                slaves => { _doc => <<DOC },
+            slaves => { _doc => <<DOC },
 List of slave servers. It gets inherited by all targets.
 DOC
-            }
-
         }
-    );
+
+    });
     return $parser;
 }
 
@@ -1403,8 +1402,22 @@ sub _postProcess {
     my $cfg = shift;
 }
 
-sub get_parser () {
-    return $parser;
+=head2 _cfgClone($what)
+
+Deep copy a config for _dyn ... only linking CODE pointers.
+
+=cut
+
+sub _cfgClone {
+    my $what = shift;
+    return $what unless ref $what;
+    for (ref $what) {
+        /^ARRAY$/ and return [ map { $_ eq $what ? $_ : _cfgClone($_) } @$what ];
+        /^HASH$/ and return { map { $_ => $what->{$_} eq $what ? 
+                                      $what->{$_} : _cfgClone($what->{$_}) } keys %$what };
+        /^CODE$/ and return $what; # we don't need to copy the subs
+    }
+    die "Cannot _cfgClone reference type @{[ref $what]}";
 }
 
 1;

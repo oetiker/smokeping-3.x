@@ -32,6 +32,10 @@ Data presentation happens in extopus
 Smokeping uses the Mail::Sender module to submit mail directly to the
 mailserver.
 
+* syslogpriority is gone
+
+The logging priority is inherent in the type of log message. 
+
 * cgiurl is gone
 
 The Smokeping Server does not need this information anymore

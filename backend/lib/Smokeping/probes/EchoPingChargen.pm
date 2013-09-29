@@ -21,10 +21,10 @@ use Carp;
 sub pod_hash {
 	return {
 		name => <<DOC,
-Smokeping::probes::EchoPingChargen - an echoping(1) probe for SmokePing
+Smokeping::probes::EchoPingChargen - an echoping(1) probe for Smokeping
 DOC
 		overview => <<DOC,
-Measures TCP chargen (port 19) roundtrip times for SmokePing.
+Measures TCP chargen (port 19) roundtrip times for Smokeping.
 DOC
 		notes => <<DOC,
 The I<udp> variable is not supported.

@@ -23,7 +23,7 @@ my $e = "=";
 sub pod_hash {
 	return {
 		name => <<DOC,
-Smokeping::probes::passwordchecker - A Base Class for implementing SmokePing Probes
+Smokeping::probes::passwordchecker - A Base Class for implementing Smokeping Probes
 DOC
 		overview => <<DOC,
 Like Smokeping::probes::basefork, but supports a probe-specific configuration file
@@ -33,7 +33,7 @@ DOC
 		description => <<DOC,
 ${e}head2 synopsis with more detail
 
-SmokePing main configuration file:
+Smokeping main configuration file:
 
  *** Probes ***
  + MyPasswordChecker
@@ -51,8 +51,8 @@ The specified password file:
 ${e}head2 Actual description
 
 In implementing authentication probes, it might not be desirable to store
-the necessary cleartext passwords in the SmokePing main configuration
-file, since the latter must be readable both by the SmokePing daemon
+the necessary cleartext passwords in the Smokeping main configuration
+file, since the latter must be readable both by the Smokeping daemon
 performing the probes and the CGI that displays the results. If the
 passwords are stored in a different file, this file can be made readable
 by only the user the daemon runs as. This way we can be sure that nobody

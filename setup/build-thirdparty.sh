@@ -3,10 +3,10 @@
 . `dirname $0`/sdbs.inc
 
 for module in \
-    Mojolicious@4.27 \
-    MojoX::Dispatcher::Qooxdoo::Jsonrpc@0.93 \
-    Mojo::Server::FastCGI@0.41 \
-    Config::Grammar@1.10 \
+    Mojolicious \
+    MojoX::Dispatcher::Qooxdoo::Jsonrpc \
+    Mojo::Server::FastCGI \
+    Config::Grammar \
     Mail::Sender \
     Net::Telnet \
     Net::OpenSSH \
@@ -16,6 +16,9 @@ for module in \
     Net::SNPP \
     Mail::Sender \
     IO::Pty \
+    Socket~2.0000 \
+    Authen::Radius \
+    Authen::TacacsPlus \
 ; do
     perlmodule $module
 done

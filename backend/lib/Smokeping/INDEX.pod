@@ -4,15 +4,15 @@ Documentation Overview
 
 =over
 
-=item L<INSTALL|SmokePing::INSTALL>
+=item L<INSTALL|Smokeping::INSTALL>
 
 Installation Instructions
 
-=item L<smokeping.pl probe|SmokePing::Command::probe>
+=item L<smokeping.pl smoke|Smokeping::Command::smoke>
 
 run probing task
 
-=item L<smokeping.cfg|SmokePing::Cfg>
+=item L<smokeping.cfg|Smokeping::Cfg>
 
 Master configuration file.
 

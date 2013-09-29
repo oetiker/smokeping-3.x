@@ -1,4 +1,4 @@
-package SmokePing::Exception;
+package Smokeping::Exception;
 
 =head1 NAME
 

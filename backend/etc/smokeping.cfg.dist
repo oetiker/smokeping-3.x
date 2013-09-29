@@ -3,17 +3,12 @@
 owner    = Peter Random
 contact  = some@address.nowhere
 mailhost = my.mail.host
-sendmail = /usr/sbin/sendmail
 # NOTE: do not put the Image Cache below cgi-bin
 # since all files under cgi-bin will be executed ... this is not
 # good for images.
-imgcache = /tmp/smokeping-31631-build/cache
-imgurl   = cache
+cachedir = /tmp/smokeping-31631-build/cache
 datadir  = /tmp/smokeping-31631-build/data
 piddir  = /tmp/smokeping-31631-build/var
-cgiurl   = http://some.url/smokeping.cgi
-smokemail = /tmp/smokeping-31631-build/etc/smokemail.dist
-tmail = /tmp/smokeping-31631-build/etc/tmail.dist
 # specify this to get syslog logging
 syslogfacility = local0
 # each probe is now run in its own process
@@ -79,21 +74,10 @@ menu = by Median
 format = Median RTT %f seconds
 
 + overview 
-
-width = 600
-height = 50
-range = 10h
+max_rtt = 2
 
 + detail
-
-width = 600
-height = 200
-unison_tolerance = 2
-
-"Last 3 Hours"    3h
-"Last 30 Hours"   30h
-"Last 10 Days"    10d
-"Last 400 Days"   400d
+max_rtt = 2
 
 #+ hierarchies
 #++ owner
@@ -105,7 +89,7 @@ unison_tolerance = 2
 
 + FPing
 
-binary = /usr/sbin/fping
+binary = /usr/bin/fping
 
 *** Slaves ***
 secrets=/tmp/smokeping-31631-build/etc/smokeping_secrets.dist

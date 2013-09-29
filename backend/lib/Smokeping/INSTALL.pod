@@ -1,24 +1,24 @@
 =head1 NAME 
 
-INSTALL - SmokePing Setup Instructions
+INSTALL - Smokeping Setup Instructions
 
 =head1 SYNOPSIS
 
-The purpose of SmokePing is to figure out performance data. It does this be
-running specialized probe module. SmokePing makes its findings available
+The purpose of Smokeping is to figure out performance data. It does this be
+running specialized probe module. Smokeping makes its findings available
 over a REST API. A custome plugin for extopus allows to visualize the
 smokeping data in a modern webinterface.
 
-This document describes how to install and test the SmokePing system.
+This document describes how to install and test the Smokeping system.
 
 =head1 INSTALLATION
 
-SmokePing is written in perl. It requires a current version of perl as well as a
+Smokeping is written in perl. It requires a current version of perl as well as a
 few special perl modules to be able to work.
 
-=head2 Unpacking SmokePing
+=head2 Unpacking Smokeping
 
-First you have to decide on a location where you want to install SmokePing. Save
+First you have to decide on a location where you want to install Smokeping. Save
 your choice into an environment variable as the rest of these instructions
 will revere them.
 
@@ -72,7 +72,7 @@ directly from the website root
 
 =head1 CONFIGURATION
 
-The SmokePing system configuration is located in F<$PREFIX/etc/smokeping.cfg>.
+The Smokeping system configuration is located in F<$PREFIX/etc/smokeping.cfg>.
 
 There is a sample configuration file in F<$PREFIX/etc/smokeping.cfg.dist>
 
@@ -87,7 +87,7 @@ and see an on-line account of what is happening.
 
 =head1 PRODUCTION USE
 
-To put SmokePing into production, make sure the probe daemon gets launched
+To put Smokeping into production, make sure the probe daemon gets launched
 when the system starts.
 
 Also make sure you keep an eye (nagios ?) on the logfile (as configured in

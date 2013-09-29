@@ -20,7 +20,7 @@ use base qw(Smokeping::probes::FPing);
 sub pod_hash {
       return {
               name => <<DOC,
-Smokeping::probes::FPing6 - FPing6 Probe for SmokePing
+Smokeping::probes::FPing6 - FPing6 Probe for Smokeping
 DOC
               description => <<DOC,
 Integrates FPing6 as a probe into smokeping. This probe is derived from

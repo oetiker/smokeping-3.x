@@ -22,7 +22,7 @@ my $DEFAULTBIN = "/usr/bin/curl";
 
 sub pod_hash {
     return {
-	name => "Smokeping::probes::Curl - a curl(1) probe for SmokePing",
+	name => "Smokeping::probes::Curl - a curl(1) probe for Smokeping",
 	overview => "Fetches an HTTP or HTTPS URL using curl(1).",
 	description => "(see curl(1) for details of the options below)",
 	authors => <<'DOC',

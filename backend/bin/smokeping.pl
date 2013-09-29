@@ -8,10 +8,14 @@ use lib "$FindBin::Bin/../lib";
 # use lib qw() # PERL5LIB
 use Mojolicious::Commands;
 
+# loading some modules just to be sure they are 
+# present and can load
+use Smokeping::Command::smoke;
+
 our $VERSION = "0";
 
 # Start commands
-Mojolicious::Commands->start_app('SmokePing');
+Mojolicious::Commands->start_app('Smokeping');
 
 __END__
 
@@ -26,16 +30,16 @@ smokeping.pl - End to End Monitoring
 
 =head1 DESCRIPTION
 
-SmokePing runs in two modes. In deamon mode it runs the actual monitoring
+Smokeping runs in two modes. In deamon mode it runs the actual monitoring
 tasks, gathering data by running probe modules. In server/fcgi mode it
 provides a REST API for remote access.
 
-SmokePing itself has no web fontend as such, but it integrates tightly with
+Smokeping itself has no web fontend as such, but it integrates tightly with
 L<Extopus|http://www.extopus.org> to provide a user friendly interface.
-Extopus uses the REST API to communicate with the SmokePing instance.
+Extopus uses the REST API to communicate with the Smokeping instance.
 
-SmokePing can run in slave mode, where it gets its configuration from a
-SmokePing Master Server and also returns its findings to the master.
+Smokeping can run in slave mode, where it gets its configuration from a
+Smokeping Master Server and also returns its findings to the master.
 
 =head1 LICENSE
 

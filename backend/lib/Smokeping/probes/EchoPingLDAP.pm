@@ -17,10 +17,10 @@ to generate the POD document.
 sub pod_hash {
 	return {
 		name => <<DOC,
-Smokeping::probes::EchoPingLDAP - an echoping(1) probe for SmokePing
+Smokeping::probes::EchoPingLDAP - an echoping(1) probe for Smokeping
 DOC
 		overview => <<DOC,
-Measures LDAP roundtrip times for SmokePing with the echoping_ldap plugin. 
+Measures LDAP roundtrip times for Smokeping with the echoping_ldap plugin. 
 DOC
 		authors => <<'DOC',
 Niko Tyni <ntyni@iki.fi>

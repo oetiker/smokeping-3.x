@@ -1,19 +1,18 @@
-package SmokePing::Command::daemon;
+package Smokeping::Command::smoke;
 
 use Mojo::Base 'Mojolicious::Command';
 use Time::HiRes qw(gettimeofday);
 use Getopt::Long qw(GetOptionsFromArray :config no_auto_abbrev no_ignore_case);
 use POSIX qw(strftime);
 use Pod::Usage;
-use IpLog::Config;
-use IpLog::Util qw(ip2db);
+use Smokeping::Config;
 use POSIX qw(strftime);
 
 has description => "gather data according to probe configuration.\n";
 has usage       => <<"EOF";
-usage: $0 daemon [options]
+usage: $0 smoke [options]
 
-iplog.pl daemon [options]
+iplog.pl smoke [options]
 
      --help           Print the manual page.
 
@@ -55,11 +54,11 @@ __END__
 
 =head1 NAME
 
-daemon.pm - SmokePing probe runner
+smoke.pm - Smokeping probe runner
 
 =head1 SYNOPSIS
 
-smokeping.pl B<daemon> [I<options>...]
+smokeping.pl B<smoke> [I<options>...]
 
      --man            Print the manual page of osp.
 
@@ -71,7 +70,7 @@ smokeping.pl B<daemon> [I<options>...]
 
 =head1 DESCRIPTION
 
-In daemon mode, smokeping runs the probes configured, gathers the data and
+In smoke mode, smokeping runs the probes configured, gathers the data and
 updates the appropriate rrd files.
 
 =head1 USAGE

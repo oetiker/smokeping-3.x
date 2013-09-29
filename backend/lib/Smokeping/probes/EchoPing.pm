@@ -23,10 +23,10 @@ my $DEFAULTBIN = "/usr/bin/echoping";
 sub pod_hash {
 	return {
 		name => <<DOC,
-Smokeping::probes::EchoPing - an echoping(1) probe for SmokePing
+Smokeping::probes::EchoPing - an echoping(1) probe for Smokeping
 DOC
 		overview => <<DOC,
-Measures TCP or UDP echo (port 7) roundtrip times for SmokePing. Can also be 
+Measures TCP or UDP echo (port 7) roundtrip times for Smokeping. Can also be 
 used as a base class for other echoping(1) probes.
 DOC
 		description => <<DOC,

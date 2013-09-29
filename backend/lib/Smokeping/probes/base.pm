@@ -26,7 +26,7 @@ use strict;
 sub pod_hash {
     return {
     	name => <<DOC,
-Smokeping::probes::base - Base Class for implementing SmokePing Probes
+Smokeping::probes::base - Base Class for implementing Smokeping Probes
 DOC
 	overview => <<DOC,
 For the time being, please use the L<Smokeping::probes::FPing|Smokeping::probes::FPing> for

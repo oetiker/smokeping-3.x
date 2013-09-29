@@ -24,13 +24,13 @@ my $DEFAULTINTERVAL = 1;
 sub pod_hash {
 	return {
 		name => <<DOC,
-Smokeping::probes::TacacsPlus - a TacacsPlus authentication probe for SmokePing
+Smokeping::probes::TacacsPlus - a TacacsPlus authentication probe for Smokeping
 DOC
 		overview => <<DOC,
-Measures TacacsPlus authentication latency for SmokePing
+Measures TacacsPlus authentication latency for Smokeping
 DOC
 		description => <<DOC,
-This probe measures TacacsPlus authentication latency for SmokePing.
+This probe measures TacacsPlus authentication latency for Smokeping.
 
 The username to be tested is specified in either the probe-specific or the 
 target-specific variable `username', with the target-specific one overriding

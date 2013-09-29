@@ -25,13 +25,13 @@ my $DEFAULTINTERVAL = 1;
 sub pod_hash {
 	return {
 		name => <<DOC,
-Smokeping::probes::Radius - a RADIUS authentication probe for SmokePing
+Smokeping::probes::Radius - a RADIUS authentication probe for Smokeping
 DOC
 		overview => <<DOC,
-Measures RADIUS authentication latency for SmokePing
+Measures RADIUS authentication latency for Smokeping
 DOC
 		description => <<DOC,
-This probe measures RADIUS (RFC 2865) authentication latency for SmokePing.
+This probe measures RADIUS (RFC 2865) authentication latency for Smokeping.
 
 The username to be tested is specified in either the probe-specific or the 
 target-specific variable `username', with the target-specific one overriding

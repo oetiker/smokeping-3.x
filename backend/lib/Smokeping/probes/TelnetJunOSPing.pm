@@ -24,7 +24,7 @@ my $e = "=";
 sub pod_hash {
 	return {
 		name => <<DOC,
-Smokeping::probes::TelnetJunOSPing - Juniper JunOS Probe for SmokePing
+Smokeping::probes::TelnetJunOSPing - Juniper JunOS Probe for Smokeping
 DOC
 		description => <<DOC,
 Integrates Juniper JunOS as a probe into smokeping.  Uses the telnet protocol 

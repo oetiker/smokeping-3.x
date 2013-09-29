@@ -126,7 +126,7 @@ sub probevars {
 			_example => '0.1'
 		},
 		useragent => {
-			_default => "SmokePing/2.x (WebProxyFilter Probe)",
+			_default => "Smokeping/2.x (WebProxyFilter Probe)",
 			_doc => "The web browser we claim to be, just in case the FW is interested"
 		},
 		maxsize => {

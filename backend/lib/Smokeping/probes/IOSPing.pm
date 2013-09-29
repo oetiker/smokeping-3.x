@@ -25,7 +25,7 @@ my $e = "=";
 sub pod_hash {
 	return {
 		name => <<DOC,
-Smokeping::probes::IOSPing - Cisco IOS Probe for SmokePing
+Smokeping::probes::IOSPing - Cisco IOS Probe for Smokeping
 DOC
 		description => <<DOC,
 Integrates Cisco IOS as a probe into smokeping.  Uses the rsh / remsh
@@ -242,7 +242,7 @@ DOC
 The (optional) iosuser option allows you to specify the remote
 username the IOS device.  If this option is omitted, the username
 defaults to the default user used by the remsh command (usually the
-user running the remsh command, ie the user running SmokePing).
+user running the remsh command, ie the user running Smokeping).
 DOC
 			_example => 'admin',
 		},

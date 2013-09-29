@@ -24,7 +24,7 @@ my $e = "=";
 sub pod_hash {
 	return {
 		name => <<DOC,
-Smokeping::probes::OpenSSHJunOSPing - Juniper SSH JunOS Probe for SmokePing
+Smokeping::probes::OpenSSHJunOSPing - Juniper SSH JunOS Probe for Smokeping
 DOC
 		description => <<DOC,
 Connect to Juniper JunOS via OpenSSH to run ping commands.

@@ -2,11 +2,11 @@ package Smokeping::sorters::base;
 
 =head1 NAME
 
-Smokeping::sorters::base - Base Class for implementing SmokePing Sorters
+Smokeping::sorters::base - Base Class for implementing Smokeping Sorters
 
 =head1 OVERVIEW
  
-Sorters are at the core of the SmokePing Charts feature, where the most
+Sorters are at the core of the Smokeping Charts feature, where the most
 interesting graphs are presented on a single page. The Sorter decides which
 graphs are considerd interesting.
 
