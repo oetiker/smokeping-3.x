@@ -1,4 +1,5 @@
 package Smokeping::Config;
+use Data::Dumper;
 
 =head1 NAME
 
@@ -264,7 +265,7 @@ DOC
 
         host      =>  {
             _doc => <<DOC,
-There are three types of "hosts" in smokeping.
+There are two types of "hosts" in smokeping.
 
 ${E}over
 
@@ -1393,14 +1394,61 @@ DOC
 
 =head2 _postProcess
 
-Post process the configuration data into a format that is easily by the application.
+Post process the configuration data into a format that is easily used by the application.
 
 =cut
 
 sub _postProcess {
     my $self = shift;
     my $cfg = shift;
+    $cfg->{Probes} = _flattenProbeTree($cfg->{Probes});
+    $cfg->{Targets} = _walkTargetTree([],$cfg->{Targets});
+    print Dumper $cfg;
 }
+
+sub _flattenProbeTree {
+    my $tree = shift;
+    # flatten Probe map
+    my %probes;
+    for my $probeName (keys %$tree){
+        my $probe = $tree->{$probeName};
+        $probes{$probeName} = $probe;
+        $probe->{probeModule} = $probeName;
+        for my $key (keys %$probe){
+            next unless ref $probe->{$key};
+            delete $probes{$probeName} if exists $probes{$probeName};
+            $probes{$key} = $probe->{$key};
+            $probes{$key}{probeModule} = $probeName;
+        }
+    }
+    return \%probes;
+}
+
+sub _walkTargetTree {
+    my $path = shift;
+    my $tree = shift;    
+    my @list;    
+    my %node;
+    for my $key (keys %$tree){
+        if (ref $tree->{$key} eq 'HASH'){
+           push @list, @{_walkTargetTree(
+                [ @$path, $tree->{menu} ], $tree->{$key}
+           )};
+        }
+        else {
+           $node{$key} = $tree->{$key}
+               if $key !~ /^_/;
+        }
+    }
+    my $level = 0;
+    map { $node{"menuLevel".($level++)} = $_ } @$path,$tree->{menu};
+    $node{path} = join '/', @$path;
+    if ($tree->{host}){
+        push @list, \%node;
+    }
+    return \@list;
+}
+
 
 =head2 _cfgClone($what)
 
