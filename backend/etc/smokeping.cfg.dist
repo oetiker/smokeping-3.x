@@ -1,3 +1,4 @@
+# sample config
 *** General ***
 
 owner    = Peter Random
@@ -88,8 +89,13 @@ max_rtt = 2
 *** Probes ***
 
 + FPing
+binary = /bin/ping
 
-binary = /usr/bin/fping
+++SlowFPing
+step = 200
+
+++FastFPing
+step = 100
 
 *** Slaves ***
 secrets=/tmp/smokeping-31631-build/etc/smokeping_secrets.dist
@@ -103,7 +109,7 @@ color=00ff00
 
 *** Targets ***
 
-probe = FPing
+probe = SlowFPing
 
 menu = Top
 title = Network Latency Grapher
@@ -115,6 +121,7 @@ menu= Targets
 #parents = owner:/Test/James location:/
 
 ++ James
+probe = FastFPing
 
 menu = James
 title =James

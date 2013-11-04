@@ -1,87 +1,144 @@
-package Smokeping::probes::base;
+package Smokeping::Probe;
 
-=head1 301 Moved Permanently
+=head1 NAME
 
-This is a Smokeping probe module. Please use the command 
+Smokeping::Probe - Base Class for Smokeping Probes
 
-C<smokeping -man Smokeping::probes::base>
+=head1 SYNOPSIS
 
-to view the documentation or the command
+ my $pod = Smokeping::Probe->pod;
+ my $targeCount = Smokeping::Probe->targetCount;
+ my $style = Smokeping::Probe->rrdStyle;
 
-C<smokeping -makepod Smokeping::probes::base>
+ my $probe = AnyEvent::Fork
+   ->new
+   ->require ("Smokeping::Probe",Smokeping::Probe->requires)    
+   ->AnyEvent::Fork::RPC::run ("Smokeping::Probe::run",
+       on_error   => sub { warn "ERROR: $_[0]"; exit 1 },
+   );
 
-to generate the POD document.
+ my $probeRunner = AnyEvent->condvar;
+
+ $probeRunner->cb(sub {
+     my $targets = getTargets;
+     $probe->($cfg,$targets, sub {
+         my $rrdUpdates = shift;
+         $rrdStack->push($rrdUpdates);
+         $probeRunner->send;
+     });
+ });
+
+ $probeRunner->send;
+ $probeRunner->recv;
+
+=head1 DESCRIPTION
+
+Smokeping 3 Probes perform the task of measuring and probing data. Since
+such activity is often rather tedious and involves lots of waiting for
+measurement tasks to complete, the probes do not run in the main smokeping
+process. They run in their own process thanks to the good services of
+L<AnyEvent::Fork::Rpc>. The main smokeping process then hands out
+measurement tasks to the probes and attaches a callback to feed the findings
+on the rrdtool for storage.
+
+
+
+
+use vars qw($VERSION);
+use Mojo::base;
+use Smokeping::style::Smokeping;
+
+=head2 rrdStyle
+
+has rrdStyle => sub {
+    Smokeping::style::Smokeping->new;
+};
+
+=head2 taskCount
+
+how many tasks can this probe run in parallel
 
 =cut
 
-use vars qw($VERSION);
-use Carp;
-use lib qw(..);
-use Smokeping;
+has taskCount => sub {
+    croak "override with the number of probing tasks this probe can perform in parallel";
+}
 
-$VERSION = 1.0;
+=head2 probevars
 
-use strict;
+what variables can the user configure as he creates an instance of this probe
+in the config file
 
-sub pod_hash {
+=cut
+
+has probevars => sub {
     return {
-    	name => <<DOC,
-Smokeping::probes::base - Base Class for implementing Smokeping Probes
+	step => {
+  	    _re => '\d+',
+	    _example => 300,
+	    _doc => <<DOC,
+Interval for running this probe. By default it will run as often as
+defined in the Database section. Note that the step in
+the RRD files is fixed when they are originally generated, and if you
+change the step parameter afterwards, you'll have to delete the old RRD
+files or somehow convert them.                
 DOC
-	overview => <<DOC,
-For the time being, please use the L<Smokeping::probes::FPing|Smokeping::probes::FPing> for
-inspiration when implementing your own probes.
+        },
+        instances => {
+            _re => '\d+'
+            _example => 1,
+            _doc => <<DOC,
+How many tasks should be running in paralle for this probe instance. Running
+more tasks in parallel will generally make things faster, but if your probe
+generates substantial load on the system or the network
 DOC
-	authors => <<'DOC',
-Tobias Oetiker <tobi@oetiker.ch>
-DOC
+            _default => 1
+        },
+	_mandatory => [],
     };
 }
 
-sub pod {
-	my $class = shift;
-	my $pod = "";
-	my $podhash = $class->pod_hash;
-	$podhash->{synopsis} = $class->pod_synopsis;
-	$podhash->{variables} = $class->pod_variables;
-	for my $what (qw(name overview synopsis description variables authors notes bugs see_also)) {
-		my $contents = $podhash->{$what};
-		next if not defined $contents or $contents eq "";
-		my $headline = uc $what;
-		$headline =~ s/_/ /; # see_also => SEE ALSO
-		$pod .= "=head1 $headline\n\n";
-		$pod .= $contents;
-		chomp $pod;
-		$pod .= "\n\n";
-	}
-	$pod .= "=cut";
-	return $pod;
+=head2 targetvars
+
+what variables can be configured when using this probe in a target
+
+=cut
+
+has targetvars {
+    return {_mandatory => []};
 }
 
-sub new($$)
-{
-    my $this   = shift;
-    my $class   = ref($this) || $this;
-    my $self = { properties => shift, cfg => shift, 
-    name => shift,
-    targets => {}, rtts => {}, addrlookup => {}, rounds_count => 0};
-    bless $self, $class;
-    return $self;
-}
+=head2 pod
 
-sub add($$)
-{
+the pod documentation for this probe
+
+=cut
+
+has pod => sub {
     my $self = shift;
-    my $tree = shift;
-    
-    $self->{target_count}++; # increment this anyway
-    return if defined $tree->{nomasterpoll} and $tree->{nomasterpoll} eq "yes";
-    $self->{targets}{$tree} = shift;
+    my %podhash;
+    # magically read myself adding generated
+    # synopsis and variables sections    
+    $podhash->{synopsis} = $class->pod_synopsis;
+    $podhash->{variables} = $class->pod_variables;
+    for my $what (qw(name overview synopsis description variables authors notes bugs see_also)) {
+	my $contents = $podhash->{$what};
+	next if not defined $contents or $contents eq "";
+	my $headline = uc $what;
+	$headline =~ s/_/ /; # see_also => SEE ALSO
+	$pod .= "=head1 $headline\n\n";
+	$pod .= $contents;
+	chomp $pod;
+	$pod .= "\n\n";
+     }
+     $pod .= "=cut";
+     return $pod;
 }
 
-sub ping($)
-{
+sub run {
     croak "this must be overridden by the subclass";
+    my $tasks = shift;
+    return __PACKAGE__->rrdStyle->updates($
 }
 
 sub round ($) {
@@ -231,12 +288,22 @@ sub report {
 
 sub step {
 	my $self = shift;
-	return $self->{properties}{step} // $self->{cfg}{Database}{step};
+	my $rv = $self->{cfg}{Database}{step};
+	unless (defined $self->{cfg}{General}{concurrentprobes}
+	    and $self->{cfg}{General}{concurrentprobes} eq 'no') {
+		$rv = $self->{properties}{step} if defined $self->{properties}{step};
+	}
+	return $rv;
 }
 
 sub offset {
 	my $self = shift;
-	return $self->{properties}{offset} // $self->{cfg}{General}{offset};
+	my $rv = $self->{cfg}{General}{offset};
+	unless (defined $self->{cfg}{General}{concurrentprobes}
+	    and $self->{cfg}{General}{concurrentprobes} eq 'no') {
+		$rv = $self->{properties}{offset} if defined $self->{properties}{offset};
+	}
+	return $rv;
 }
 
 sub offset_in_seconds {
@@ -277,72 +344,6 @@ sub target_count {
 	return $self->{target_count};
 }
 
-sub probevars {
-	return {
-		step => {
-			_re => '\d+',
-			_example => 300,
-			_doc => <<DOC,
-Duration of the base interval that this probe should use, if different
-from the one specified in the 'Database' section. Note that the step in
-the RRD files is fixed when they are originally generated, and if you
-change the step parameter afterwards, you'll have to delete the old RRD
-files or somehow convert them.
-DOC
-		},
-		offset => {
-			_re => '(\d+%|random)',
-			_re_error =>
-			  "Use offset either in % of operation interval or 'random'",
-			_example => '50%',
-			_doc => <<DOC,
-If you run many probes concurrently you may want to prevent them from
-hitting your network all at the same time. Using the probe-specific
-offset parameter you can change the point in time when each probe will
-be run. Offset is specified in % of total interval, or alternatively as
-'random', and the offset from the 'General' section is used if nothing
-is specified here. Note that this does NOT influence the rrds itself,
-it is just a matter of when data acqusition is initiated.
-DOC
-		},
-                workers => {
-                        _re => '\d+',
-			_default => 4,
-                        _doc => <<DOC,
-To work as efficiently as possibel, smokeping will operate multiple
-instances of this probe, and distribute the pending work among these
-instances. If you want to probe a great many targets, and have an appropriate amount
-of mamory, you could easily set the number of workers to 100 or more.
-Note that some of the Smokeping probes like the FPing probe for example are
-working on multiple targets internally, so there it does not make much sense having
-multiple workers unless you have multiple sub probes define which configure fping differently, and you
-want to enable them to run in parallel.
-DOC
-                },
-		pings => {
-			_re => '\d+',
-           		_sub => sub {
-                		my $val = shift;
-                		return "ERROR: The pings value must be at least 3."
-                        		if $val < 3;
-                		return undef;
-           		},
-			_example => 20,
-			_doc => <<DOC,
-How many pings should be sent to each target, if different from the global
-value specified in the Database section. Note that the number of pings in
-the RRD files is fixed when they are originally generated, and if you
-change this parameter afterwards, you'll have to delete the old RRD
-files or somehow convert them.
-DOC
-		},
-		_mandatory => [],
-	};
-}
-
-sub targetvars {
-	return {_mandatory => []};
-}
 
 # a helper method that combines two var hash references
 # and joins their '_mandatory' lists.

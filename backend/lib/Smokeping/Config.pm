@@ -559,6 +559,7 @@ The example above would be written like this:
  + FPing
  # this value is common for the two subprobes
  binary = /usr/bin/fping 
+ maxWorkers = 10
 
  ++ FPingLarge
  packetsize = 1000
@@ -780,8 +781,7 @@ DOC
             Presentation => { 
                 _doc => <<DOC,
 The actual presentation of smokeping data happens in extopus. This
-section provides input to the extopus Smokeping plugin and defines some
-special items Defines how the Smokeping data should be presented.
+section provides input to the extopus Smokeping plugin.
 DOC
                 _sections => [ qw(overview detail charts multihost hierarchies) ],
                 _mandatory => [ qw(overview template detail) ],

@@ -10,7 +10,7 @@ use Mojolicious::Commands;
 
 # loading some modules just to be sure they are 
 # present and can load
-use Smokeping::Command::smoke;
+use Smokeping::Command::burn;
 
 our $VERSION = "0";
 

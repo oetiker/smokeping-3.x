@@ -19,6 +19,10 @@ for module in \
     Socket~2.0000 \
     Authen::Radius \
     Authen::TacacsPlus \
+    AnyEvent \
+    AnyEvent::Fork::Pool \
+    JSON \
+    JSON::XS \
 ; do
     perlmodule $module
 done
