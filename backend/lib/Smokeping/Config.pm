@@ -9,7 +9,7 @@ Smokeping::Config - The SmnokePing Config Reader Class
 
  use Smokeping::Config;
 
- my $config = Smokeping::Config->new(file=>'/etc/smokeping.conf);
+ my $config = Smokeping::Config->new(file=>'/etc/smokeping.conf');
 
  my $cfg = $config->cfgHash();
  my $pod = $config->pod();
@@ -27,7 +27,6 @@ use Mojo::Util qw(hmac_sha1_sum);
 use Socket qw(getaddrinfo);
 use Carp;
 use Config::Grammar::Dynamic;
-use Smokeping::probes::base;
 
 use POSIX qw(strftime);
 
@@ -151,11 +150,11 @@ sub _make_parser {
     my $PROBE_RE = '[A-Z][a-zA-Z]+';
 
     my $pluginMap = {};
-    for my $type (qw(probes matchers sorters)){
+    for my $type (qw(Probe sorters matchers)){
         for my $path (@INC){
-            for my $file (glob($path.'/Smokeping/'.$type.'/[A-Z]*.pm')){
+            for my $file (glob($path.'/Smokeping/'.$type.'/[A-Z]*/Config.pm')){
                 my $plugin = $file;
-                $plugin =~ s{.*/Smokeping/$type/(.*)\.pm}{$1};
+                $plugin =~ s{.*/Smokeping/$type/(.+?)/Config\.pm}{$1};
                 $pluginMap->{$type}{$plugin} =  "(See the L<separate module documentation|Smokeping::${type}::${plugin}> for detailed Information about each variable.)"
             }
         }
@@ -439,7 +438,7 @@ DOC
             my $targetvars;
             # load the probe module
             eval {
-                require 'Smokeping/probes/'.${name}.'.pm';    
+                require 'Smokeping/Probe/'.${name}.'/Config.pm';    
             };
             if ($@){
                 $self->log->error("Loading $name: $@");
@@ -447,13 +446,13 @@ DOC
             }
             do {
                 no strict 'refs';
-                my $class = 'Smokeping::probes::'.$name;
+                my $self = "Smokeping::Probe::${name}::Config"->new;
                     
                 # for this to work, we need a quoted string here, not something
                 # like 'xxx::'.$value as -> is binding more strongly than .
                 # modify the grammar
-                $probevars = $class->probevars;
-                $targetvars = $class->targetvars;
+                $probevars = $self->probeVars;
+                $targetvars = $self->targetVars;
             };
             
             $storedtargetvars{$name} = $targetvars;
@@ -1401,19 +1400,20 @@ Post process the configuration data into a format that is easily used by the app
 sub _postProcess {
     my $self = shift;
     my $cfg = shift;
-    $cfg->{Probes} = _flattenProbeTree($cfg->{Probes});
+    $cfg->{Probes} = _flattenProbeTree($cfg);
     $cfg->{Targets} = _walkTargetTree([],$cfg->{Targets});
-    print Dumper $cfg;
 }
 
 sub _flattenProbeTree {
-    my $tree = shift;
+    my $cfg = shift;
+    my $tree = $cfg->{Probes};
     # flatten Probe map
     my %probes;
     for my $probeName (keys %$tree){
         my $probe = $tree->{$probeName};
         $probes{$probeName} = $probe;
         $probe->{probeModule} = $probeName;
+        # or are there probe instances ?
         for my $key (keys %$probe){
             next unless ref $probe->{$key};
             delete $probes{$probeName} if exists $probes{$probeName};
@@ -1421,7 +1421,19 @@ sub _flattenProbeTree {
             $probes{$key}{probeModule} = $probeName;
         }
     }
+    # so we keep the module config opjects in the config hash
+    for my $instance (keys %probes){
+        $probes{$instance}{pings} ||= $cfg->{Database}{pings};
+        $probes{$instance}{step} ||= $cfg->{Database}{step};
+        my $probeModule = $probes{$instance}{probeModule};
+        no strict 'refs';
+        $probes{$instance} = "Smokeping::Probe::${probeModule}::Config"->new(
+            cfg=> $probes{$instance},
+            probeName => $instance
+        );
+    }
     return \%probes;
+ 
 }
 
 sub _walkTargetTree {

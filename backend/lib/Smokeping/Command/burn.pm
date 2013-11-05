@@ -50,11 +50,11 @@ sub run {
 
 
 sub burn {
-    my $self;
+    my $self = shift;
     my $pool = $self->createProbes;
     my $cfg = $self->config->cfgHash;
     my $targets = $cfg->{Targets};
-    my %timers;
+    my %timer;
     my %running;
     my %skipped;
     my %queue;
@@ -72,74 +72,71 @@ sub burn {
                 }
                 else {
                     $running{$task} = 1;               
-                    push @{$queue{$task->{probe}},$task;
+                    push @{$queue{$task->{probe}}},$task;
                 }
            }
        )
     }
     # have the probe look in their task list for work
     for my $probe (keys %$pool){
-        my $targetcount = $pool->{$probe}{config}->targetcount;
+        my $targetcount = $pool->{$probe}{config}->targetCount;
         $timer{probe}{$probe} = AnyEvent->timer(
-           interval => 1,
-           cb => sub {
-               my $queue = $queue->{$probe};
-               return unless @$queue;
-               my @work;
-               while (push @work = shift @$queue){ 
-                   while (scalar @work < $targetcount and @$queue){
-                        push @work = shift @$queue
-                   }
-                   $pool->{$probe}{worker}->({
-                        cfg => $cfg->{Probes},
-                        work => \@work,
-                   }, sub {
-                        my $result = shift;
-                        for my $path (keys %$results){
-                            $rrdqueue{$path}, $result{$path};
-                        }
-                        for my $task (@work){
-                            if ($skipped{$task}){
-                                $skipped{$task} = 0;    
-                                push @$queue,$task;
+            interval => 1,
+            cb => sub {
+                my $probe = $queue{$probe};
+                return unless @$probe;
+                my @work;
+                while (@$probe){
+                    push @work, shift @$probe;
+                    while (scalar @work < $targetcount and @$probe){
+                        push @work, shift @$probe;
+                    }
+                    $pool->{$probe}{worker}->(
+                        \@work,
+                        sub {
+                            my $result = shift;
+                            for my $path (keys %$result){
+                                push @{$rrdqueue{$path}}, $result->{$path};
                             }
-                            else {
-                                $running{$task} = 0;
-                           }
+                            for my $task (@work){
+                                if ($skipped{$task}){
+                                    $skipped{$task} = 0;    
+                                    push @{$queue{$probe}},$task;
+                                }
+                                else {
+                                    $running{$task} = 0;
+                                }
+                            }
                         }
-                   });
+                    );
                 }
-           });
-        }
-    }
-        
+            }
+        );
+    }    
 }
 
 sub createProbes {
-    my $self = shift;
+    my $self = shift;;
     my $cfg = $self->config->cfgHash;   
     my %Probe;
     for my $key ( keys %{$cfg->{Probes}} ){
-        my $probeModule = $cfg->{Probes}{$key}{probeModule};
-        my $instance = do {
-             no strict 'refs'; ## no critic (ProhibitNoStrict)
-             # for this to work, we need a quoted string here, not something
-             # like 'xxx::'.$value as -> is binding more strongly than .
-             "Smokeping::Probe::${probeModule}::Config"->new;
-        };                                  
+        my $probeCfg = $cfg->{Probes}{$key};
+        my $probeModule = $probeCfg->probeModule;
         my $rpc = AnyEvent::Fork
            ->new
-           ->require ("Smokeping::Probe::$probeModule::Worker")
-           ->AnyEvent::Fork::RPC::run ("Smokeping::Probe::${probeModule}::Worker::run",
+           ->require ("Smokeping::Probe::${probeModule}::Worker")
+           ->AnyEvent::Fork::RPC::run(
+                "Smokeping::Probe::${probeModule}::Worker::run",
                 on_error   => sub { $self->log->error($_[0]) },
                 on_event   => sub { $self->log->warn($_[0]) },  
                 serialiser =>  $AnyEvent::Fork::RPC::JSON_SERIALISER,
                 load => 1,
-                max => $cfg->{Probes}{$key}{workers}
+                init => "Smokeping::Probe::${probeModule}::Worker::init",
+                max => $probeCfg->maxWorkers,
            );
         $Probe{$key} = {
             worker => $rpc,
-            config => $instance
+            config => $probeCfg
         };
     }
     return \%Probe;
