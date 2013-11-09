@@ -7,6 +7,7 @@ use POSIX qw(strftime);
 use Pod::Usage;
 use Smokeping::Config;
 use POSIX qw(strftime);
+use AnyEvent::Loop;
 use AnyEvent::Fork;
 use AnyEvent::Fork::RPC;
 
@@ -24,13 +25,8 @@ smokeping.pl burn [options]
 
 EOF
 
-has 'config' => sub {
-    my $self = shift;
-    my $conf = Smokeping::Config->new(
-        app => $self->app,
-        file => $ENV{SMOKEPING_CONF} || $self->app->home->rel_file('etc/smokeping.cfg' )
-    );
-    return $conf;
+has config => sub {
+    return shift->app->config;
 };
 
 use vars qw(%opt);
@@ -83,15 +79,16 @@ sub burn {
         $timer{probe}{$probe} = AnyEvent->timer(
             interval => 1,
             cb => sub {
-                my $probe = $queue{$probe};
-                return unless @$probe;
+                my $target = $queue{$probe};
+                return unless @$target;
                 my @work;
-                while (@$probe){
-                    push @work, shift @$probe;
-                    while (scalar @work < $targetcount and @$probe){
-                        push @work, shift @$probe;
+                while (@$target){
+                    push @work, shift @$target;
+                    while (scalar @work < $targetcount and @$target){
+                        push @work, shift @$target;
                     }
                     $pool->{$probe}{worker}->(
+                        $cfg->{Probes}{$probe}->cfg,
                         \@work,
                         sub {
                             my $result = shift;
@@ -112,7 +109,10 @@ sub burn {
                 }
             }
         );
-    }    
+    }
+
+    AnyEvent::Loop::run;
+
 }
 
 sub createProbes {
@@ -127,8 +127,8 @@ sub createProbes {
            ->require ("Smokeping::Probe::${probeModule}::Worker")
            ->AnyEvent::Fork::RPC::run(
                 "Smokeping::Probe::${probeModule}::Worker::run",
-                on_error   => sub { $self->log->error($_[0]) },
-                on_event   => sub { $self->log->warn($_[0]) },  
+                on_error   => sub { $self->app->log->error($_[0]) },
+                on_event   => sub { $self->app->log->log(@_) },  
                 serialiser =>  $AnyEvent::Fork::RPC::JSON_SERIALISER,
                 load => 1,
                 init => "Smokeping::Probe::${probeModule}::Worker::init",

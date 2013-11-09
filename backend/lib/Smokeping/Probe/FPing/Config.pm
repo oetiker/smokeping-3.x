@@ -1,7 +1,7 @@
 package Smokeping::Probe::FPing::Config;
 
 use Mojo::Base qw(Smokeping::Probe::Config);
-
+use Text::ParseWords;
 =pod
 
 =head1 NAME
@@ -39,11 +39,13 @@ Tobias Oetiker <tobi@oetiker.ch>
 
 # this is needed to be able to extract the pod
 # documentation
-has sourceFile => sub { __FILE __ }; 
+has sourceFile => sub {
+    __FILE__
+}; 
 
 has probeDesc => sub {
     my $self = shift;
-    return $self->properties->{desctiption}
+    return $self->cfg->{description}
 };
 
 has probeUnit => sub {
@@ -87,8 +89,13 @@ has probeVars => sub {
 	        options => {
 		        _doc => <<DOC,
 The fping command is highly configurable. You can set the packet size, the interval between pings, type
-of service, source address, ... See the documentation in the fping manual page.
+of service, source address, ... See the documentation in the fping manual page. Use shell syntax if you
+need to quote whitespace.
 DOC
+                _example => '-S 192.168.1.1',
+                _sub => sub {
+                    $_[0] = [ quotewords($_[0]) ];
+                },
 	        }
         }
     );

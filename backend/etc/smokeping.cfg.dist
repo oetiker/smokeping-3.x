@@ -89,7 +89,7 @@ max_rtt = 2
 *** Probes ***
 
 + FPing
-binary = /bin/ping
+binary = /usr/bin/fping
 
 ++SlowFPing
 step = 200
@@ -127,7 +127,23 @@ menu = James
 title =James
 alerts = someloss
 slaves = boomer slave2
-host = james.address
+host = james.oetiker.ch
+
+++ Octopus
+probe = SlowFPing
+
+menu = Octopus
+title = Octopus
+alerts = someloss
+slaves = boomer slave2
+host = octopus.oetiker.ch
+
+++ Zimbox
+probe = SlowFPing
+
+menu = Zimbox
+title = Zimbox
+host = zimbox.ch
 
 ++ MultiHost
 

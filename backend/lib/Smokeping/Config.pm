@@ -25,9 +25,8 @@ Configuration reader Class for Smokeping
 use Mojo::Base -base;
 use Mojo::Util qw(hmac_sha1_sum);
 use Socket qw(getaddrinfo);
-use Carp;
 use Config::Grammar::Dynamic;
-
+use Carp;
 use POSIX qw(strftime);
 
 =head2 file
@@ -90,7 +89,8 @@ ${E}head1 SYNOPSIS
 
 ${E}head1 DESCRIPTION
 
-The bwtr configuration is based on L<Config::Grammar>. The following options are available.
+The smokeping configuration parser is built using L<Config::Grammar>. The
+following options are available.
 
 HEADER_END
 
